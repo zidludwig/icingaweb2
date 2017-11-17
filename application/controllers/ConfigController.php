@@ -5,6 +5,7 @@ namespace Icinga\Controllers;
 
 use Exception;
 use Icinga\Application\Version;
+use Icinga\File\Storage\LocalFileStorage;
 use InvalidArgumentException;
 use Icinga\Application\Config;
 use Icinga\Application\Icinga;
@@ -50,6 +51,12 @@ class ConfigController extends Controller
             'title' => $this->translate('Configure the user and group backends'),
             'label' => $this->translate('Authentication'),
             'url'   => 'config/userbackend',
+            'baseTarget' => '_main'
+        ));
+        $tabs->add('tls', array(
+            'title' => $this->translate('Configure TLS root CA certificate collections and TLS client identities'),
+            'label' => $this->translate('TLS'),
+            'url'   => 'config/tls',
             'baseTarget' => '_main'
         ));
         return $tabs;
@@ -186,6 +193,38 @@ class ConfigController extends Controller
         $this->view->backendNames = Config::app('groups');
         $this->createApplicationTabs()->activate('authentication');
         $this->render('userbackend/reorder');
+    }
+
+    /**
+     * Action for listing TLS root CA certificate collections and TLS client identities
+     */
+    public function tlsAction()
+    {
+        $this->assertPermission('config/application/tlscert');
+
+        $this->createApplicationTabs()->activate('tls');
+
+        $rootCaCollections = array();
+        foreach (new LocalFileStorage(Icinga::app()->getStorageDir('framework/tls/rootcacollections')) as $ca) {
+            $matches = array();
+            if (preg_match('~\A([0-9a-f]{2}+)\.pem\z~i', $ca, $matches)) {
+                $rootCaCollections[hex2bin($matches[1])] = null;
+            }
+        }
+
+        ksort($rootCaCollections);
+        $this->view->rootCaCollections = array_keys($rootCaCollections);
+
+        $clientIdentities = array();
+        foreach (new LocalFileStorage(Icinga::app()->getStorageDir('framework/tls/clientidentities')) as $client) {
+            $matches = array();
+            if (preg_match('~\A([0-9a-f]{2}+)\.pem\z~i', $client, $matches)) {
+                $clientIdentities[hex2bin($matches[1])] = null;
+            }
+        }
+
+        ksort($clientIdentities);
+        $this->view->clientIdentities = array_keys($clientIdentities);
     }
 
     /**
