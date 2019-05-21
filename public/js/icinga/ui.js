@@ -636,9 +636,6 @@
                         this.mobileMenu = true;
                     }
                 } else {
-                    $headerLogo.css({
-                        top: $header.css('height')
-                    });
                     $main.css({
                         top: $header.css('height')
                     });
