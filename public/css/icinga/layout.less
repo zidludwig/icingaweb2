@@ -112,9 +112,10 @@
   .clearfix();
 
   & > .container {
-    float: left;
-    // Column width controlled by #layout
-    width: 100%;
+
+    &:empty {
+      display: none;
+    }
 
     // Container scrolling
     height: 100%;
